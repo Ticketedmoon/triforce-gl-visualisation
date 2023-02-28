@@ -4,7 +4,6 @@ Fun 3D Graphics project built with Modern OpenGL visualising the Triforce from T
 #### Prerequisites
 - OpenGL 4.6  
 - Libraries can be installed with `./setup.sh`  
-- glad and KHR can be installed from `https://glad.dav1d.de/`
 
 #### Dev Log
 
@@ -21,3 +20,9 @@ https://user-images.githubusercontent.com/21260839/222000251-13bba5e7-2c21-4f36-
 
 - This is also functional with a joystick controller, e.g., a ps4 controller is what I have been using.
   Movement is bound to the left stick, pitch/yaw adjustment to the right stick and L2/R2 for zoom/fov change.
+
+
+#### Additional Information
+- glad and KHR were downloaded from `https://glad.dav1d.de/`
+- stb_image was pulled in from https://github.com/nothings/stb/blob/master/stb_image.h
+- glm: https://github.com/g-truc/glm
