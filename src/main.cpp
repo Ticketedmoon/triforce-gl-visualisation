@@ -8,6 +8,7 @@
 
 #include "lib/shader/shader.hpp"
 #include "lib/controller/joystick.hpp"
+#include "lib/camera/camera.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb/stb_image.h"
@@ -15,25 +16,20 @@
 #include <filesystem>
 
 // Variables
-size_t WINDOW_WIDTH = 800;
-size_t WINDOW_HEIGHT = 600;
+uint32_t WINDOW_WIDTH = 800;
+uint32_t WINDOW_HEIGHT = 600;
 
 float lastMouseX = WINDOW_WIDTH / 2;
 float lastMouseY = WINDOW_HEIGHT / 2;
 
-float pitch = 0.0f;
-float yaw = -90.0f;
-
 bool firstMouse = true;
 
-float fov = 45.0f;
-
 // Array in-case we want more positions
-glm::vec3 cubePositions[] = {
+static glm::vec3 cubePositions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f)
 };
 
-unsigned int vboId, vaoId, eboId;
+uint32_t vboId, vaoId, eboId;
 
 float vertices[] = {
     // Back
@@ -97,17 +93,14 @@ int indices[] = {
     4, 12, 13
 };
 
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 
-Shader shader;
-Joystick joystick;
+static Shader shader;
+static Joystick joystick;
+static Camera camera;
 
-unsigned int TOTAL_VERTICES = 54;
+uint32_t TOTAL_VERTICES = 54;
 
 // Function Declarations.
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -117,7 +110,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 void render(GLFWwindow* window);
 void storeVertexDataOnGpu();
-void draw();
+void draw(Camera &camera);
 
 int main() 
 {
@@ -187,13 +180,18 @@ void render(GLFWwindow* window)
     // build shader
     shader = Shader("src/data/shader/vertex.shader", "src/data/shader/fragment.shader");
 
+    glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+    camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
+
 	while(!glfwWindowShouldClose(window))
 	{
 		// Input
 		processInput(window);
 
 		// Rendering commands
-		draw();
+		draw(camera);
 
 		// check and call events and swap the buffers
 		glfwSwapBuffers(window);
@@ -206,7 +204,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void joystick_callback(GLFWwindow* window, double xpos, double ypos)
+void joystick_callback(double xpos, double ypos)
 {
     if (xpos > 0.3 || xpos < -0.3 || ypos > 0.3 || ypos < -0.3)
     {
@@ -217,26 +215,10 @@ void joystick_callback(GLFWwindow* window, double xpos, double ypos)
         float xoffset = xpos * sensitivity;
         float yoffset = ypos * sensitivity;
 
-        yaw   += xoffset;
-        pitch -= yoffset;
-
-        if (pitch > 89.0f)
-        {
-            pitch =  89.0f;
-        }
-        if (pitch < -89.0f)
-        {
-            pitch = -89.0f;
-        }
-
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        cameraFront = glm::normalize(direction);
+        camera.updateRotationAxes(xoffset, yoffset, true);
+        camera.updateCameraFront();
     }
 }
-
 
 void processInput(GLFWwindow *window)
 {
@@ -249,8 +231,15 @@ void processInput(GLFWwindow *window)
     lastFrame = currentFrame;
 
     bool joystickPresent = glfwJoystickPresent(GLFW_JOYSTICK_1);
-    fov = joystick.calculateNewFov(joystickPresent, fov);
+
+    uint32_t fov = joystick.calculateNewFov(joystickPresent, camera.getFov());
+    camera.setFov(fov);
+
     JoystickButtons buttons = joystick.getJoystickButtons();
+
+    glm::vec3 cameraPos = camera.getCameraPos();
+    glm::vec3 cameraFront = camera.getCameraFront();
+    glm::vec3 cameraUp = camera.getCameraUp();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || buttons.leftY < -0.3)
     {
@@ -273,19 +262,11 @@ void processInput(GLFWwindow *window)
         cameraPos += (glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);
     }
 
-    if (fov < 1.0f)
-    {
-        fov = 1.0f;
-    }
-    if (fov > 45.0f)
-    {
-        fov = 45.0f; 
-    }
-
-    joystick_callback(window, buttons.rightX, buttons.rightY);
+    camera.setCameraPos(cameraPos);
+    joystick_callback(buttons.rightX, buttons.rightY);
 }
 
-void draw()
+void draw(Camera &camera)
 {
 	// Clear the screen with a colour
 	glClearColor(0.0f, 0.0f, 0.5f, 0.2f);
@@ -294,38 +275,7 @@ void draw()
 	// Every shader and rendering call after the `glUseProgram` call will now use this program object (and thus the shaders).
     shader.use();
 
-    // 3d
-    glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-    float radius = 30.0f;
-    float camX = static_cast<float>(sin(glfwGetTime()) * radius);
-    float camZ = static_cast<float>(cos(glfwGetTime()) * radius);
-
-    /*
-    view = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 1.5f), // Camera pos
-        glm::vec3(0.0f, 0.0f, 0.0f), // Target pos
-        glm::vec3(1.0f, 1.0f, 10.0f)); // Up vector (World-Space)
-    */
-    view = glm::lookAt(cameraPos, // Camera Pos
-                       cameraPos + cameraFront, // Target Pos
-                       cameraUp); // Up Vector
-
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
-
-	glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-
-    glm::mat4 projection = glm::perspective(glm::radians(fov), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
-    glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-	glBindVertexArray(vaoId);
-    
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, cubePositions[0]);
-
-    float angle = 45.0f * (2.0f); 
-    model = glm::rotate(model, glm::radians(angle) * (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-    
-    glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+    camera.view(vaoId, cubePositions);
 
     glDrawElements(GL_TRIANGLES, TOTAL_VERTICES, GL_UNSIGNED_INT, 0);
 }
@@ -378,26 +328,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    yaw   += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-    {
-        pitch =  89.0f;
-    }
-    if (pitch < -89.0f)
-    {
-        pitch = -89.0f;
-    }
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    camera.updateRotationAxes(xoffset, yoffset, false);
+    camera.updateCameraFront();
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    fov -= (float)yoffset;
+    float fov = camera.getFov() - (float)yoffset;
+    camera.setFov(fov);
 }

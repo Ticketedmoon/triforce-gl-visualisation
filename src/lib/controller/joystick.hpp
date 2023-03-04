@@ -31,7 +31,6 @@ class Joystick
                     fov += (joystickButtons.L2 + 1);
                 }
             }
-            std::cout << fov << std::endl;
             return fov;
         }
 
