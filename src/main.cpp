@@ -37,30 +37,30 @@ unsigned int vboId, vaoId, eboId;
 
 float vertices[] = {
     // Back
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.0f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -1.0f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.0f, -0.5f, -0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
 
-     0.0f,  0.5f, -0.5f,  0.0f, 0.0f,
-     1.0f,  0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  1.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 0.0f,
+     0.0f,  1.5f, -0.5f,  1.0f, 1.0f,
 
-     0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     1.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     1.0f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.0f, -0.5f, -0.5f,  0.0f, 0.0f,
+     1.0f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
 
     // Front
-    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
-     0.0f,  0.5f, 0.0f,  1.0f, 1.0f,
+    -1.0f, -0.5f, 0.0f,  0.0f, 0.0f,
+     0.0f, -0.5f, 0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f, 0.0f,  1.0f, 1.0f,
 
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f,
-     1.0f,  0.5f, 0.0f,  1.0f, 0.0f,
-     0.5f,  1.5f, 0.0f,  1.0f, 1.0f,
+    -0.5f,  0.5f, 0.0f,  0.0f, 0.0f,
+     0.5f,  0.5f, 0.0f,  1.0f, 0.0f,
+     0.0f,  1.5f, 0.0f,  1.0f, 1.0f,
 
-     0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
-     1.5f, -0.5f, 0.0f,  1.0f, 0.0f,
-     1.0f,  0.5f, 0.0f,  1.0f, 1.0f,
+     0.0f, -0.5f, 0.0f,  0.0f, 0.0f,
+     1.0f, -0.5f, 0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, 0.0f,  1.0f, 1.0f,
 };
 
 int indices[] = {
@@ -318,9 +318,11 @@ void draw()
     glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 	glBindVertexArray(vaoId);
+    
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, cubePositions[0]);
-    float angle = 45.0f * (1.5f); 
+
+    float angle = 45.0f * (2.0f); 
     model = glm::rotate(model, glm::radians(angle) * (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
     
     glUniformMatrix4fv(glGetUniformLocation(shader.getID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
