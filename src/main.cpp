@@ -129,44 +129,24 @@ int main()
         return -1;
     }
 
-	// Open Window
     glfwMakeContextCurrent(window);
-
-	// Load openGL functions for this specific openGL Implementation via GLAD
 	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}  
 
-	// Viewport dictates how we want to display the data and coordinates with respect to the window
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
-
-    /* 
-        Tell GLFW that it should hide the cursor but still capture it. 
-        Capturing a cursor means that, once the application has focus, the mouse cursor stays within the center of the window.
-        Wherever we move the mouse it won't be visible and it should not leave the window. This is perfect for an FPS camera system.
-    */
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    /* 
-       Enable depth buffer
-       The depth is stored within each fragment (as the fragment's z value) and whenever the fragment wants to output its color, 
-       OpenGL compares its depth values with the z-buffer. If the current fragment is behind the other fragment it is discarded, 
-       otherwise overwritten. This process is called depth testing and is done automatically by OpenGL.
-    */
     glEnable(GL_DEPTH_TEST);
 
-    // Register mouse callback - Each time mouse moves this will be called with the (x,y) coords of the mouse.
     glfwSetCursorPosCallback(window, mouse_callback); 
-
-    // Scroll callback (change fov of perspective project based on y coordinate)
     glfwSetScrollCallback(window, scroll_callback); 
+
 	render(window);
 
 	glDeleteVertexArrays(1, &vaoId);
     glDeleteBuffers(1, &vboId);
-
     shader.deleteProgram();
 
 	glfwTerminate();
@@ -177,23 +157,20 @@ void render(GLFWwindow* window)
 {
 	storeVertexDataOnGpu();
 
-    // build shader
     shader = Shader("src/data/shader/vertex.shader", "src/data/shader/fragment.shader");
 
     glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+    
     camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
 
 	while(!glfwWindowShouldClose(window))
 	{
-		// Input
 		processInput(window);
 
-		// Rendering commands
 		draw(camera);
 
-		// check and call events and swap the buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();    
 	}
@@ -304,14 +281,9 @@ void storeVertexDataOnGpu()
     glBindVertexArray(0); 
 }
 
-/*
-    1. Calculate the mouse's offset since the last frame.
-    2. Add the offset values to the camera's yaw and pitch values.
-    3. Add some constraints to the minimum/maximum pitch values.
-    4. Calculate the direction vector.
-*/
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+    std::cout << xpos << ", " << ypos << std::endl;
     if (firstMouse)
     {
         lastMouseX = xpos;

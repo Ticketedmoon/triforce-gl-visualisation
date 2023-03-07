@@ -13,15 +13,17 @@ class Camera
                glm::vec3 cameraPos, glm::vec3 cameraFront, glm::vec3 cameraUp,
                float fov, float pitch, float yaw)
         {
-            this->m_windowWidth = windowWidth;
-            this->m_windowHeight = windowHeight;
-            this->m_shaderProgramId = shaderProgramId;
-            this->m_cameraPos = cameraPos;
-            this->m_cameraFront = cameraFront;
-            this->m_cameraUp = cameraUp;
-            this->m_fov = fov;
-            this->m_pitch = pitch;
-            this->m_yaw = yaw;
+            m_windowWidth = windowWidth;
+            m_windowHeight = windowHeight;
+            m_shaderProgramId = shaderProgramId;
+            m_cameraPos = cameraPos;
+            m_cameraFront = cameraFront;
+            m_cameraUp = cameraUp;
+            m_fov = fov;
+            m_pitch = pitch;
+            m_yaw = yaw;
+            
+            updateCameraFront();
         }
 
         void view(uint32_t vaoId, glm::vec3 cubePositions[])
