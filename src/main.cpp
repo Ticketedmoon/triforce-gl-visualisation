@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include "stdlib.h"
 #include <iostream>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -143,6 +144,9 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback); 
     glfwSetScrollCallback(window, scroll_callback); 
 
+    // play music (Note, we'll need to use sfml-audio here)
+
+    // render window
 	render(window);
 
 	glDeleteVertexArrays(1, &vaoId);
