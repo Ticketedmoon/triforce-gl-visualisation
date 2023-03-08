@@ -1,5 +1,8 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
+#include <irrKlang.h>
+using namespace irrklang;
+
 #include "stdlib.h"
 #include <iostream>
 
@@ -116,6 +119,10 @@ void draw(Camera &camera);
 int main() 
 {
     std::cout << "Hello, Triforce!" << std::endl;
+
+    // Temporary
+    ISoundEngine *SoundEngine = createIrrKlangDevice();
+    SoundEngine->play2D("src/data/audio/light_spirit_appears.mp3", true);
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -287,7 +294,6 @@ void storeVertexDataOnGpu()
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    std::cout << xpos << ", " << ypos << std::endl;
     if (firstMouse)
     {
         lastMouseX = xpos;
