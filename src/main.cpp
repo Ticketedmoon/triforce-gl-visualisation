@@ -100,9 +100,13 @@ int indices[] = {
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 
+static bool isPlaying = true;
+
 static Shader shader;
 static Joystick joystick;
 static Camera camera;
+
+ISoundEngine *SoundEngine;
 
 uint32_t TOTAL_VERTICES = 54;
 
@@ -111,10 +115,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 void render(GLFWwindow* window);
 void storeVertexDataOnGpu();
 void draw(Camera &camera);
+void playAudio(bool status);
 
 int main() 
 {
@@ -146,9 +152,12 @@ int main()
 
     glfwSetCursorPosCallback(window, mouse_callback); 
     glfwSetScrollCallback(window, scroll_callback); 
+    glfwSetKeyCallback(window, key_callback);
 
-    // play music
-    ISoundEngine *SoundEngine = createIrrKlangDevice();
+    // Initialise Sound Engine
+    SoundEngine = createIrrKlangDevice();
+
+    // Play
     SoundEngine->play2D("src/data/audio/light_spirit_appears.ogg", true);
 
     // render window
@@ -206,9 +215,26 @@ void joystick_callback(double xpos, double ypos)
     }
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+        if (isPlaying)
+        {
+            SoundEngine->stopAllSounds();
+        } 
+        else 
+        {
+            SoundEngine->play2D("src/data/audio/light_spirit_appears.ogg", true);
+        }
+        isPlaying = !isPlaying;
+    }
+}
+
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) 
+    {
 		glfwSetWindowShouldClose(window, true);
 	}
 
