@@ -100,7 +100,7 @@ int indices[] = {
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 
-static bool isPlaying = true;
+static bool isPlaying = false;
 
 static Shader shader;
 static Joystick joystick;
