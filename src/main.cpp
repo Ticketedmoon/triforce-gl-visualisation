@@ -120,10 +120,6 @@ int main()
 {
     std::cout << "Hello, Triforce!" << std::endl;
 
-    // Temporary
-    ISoundEngine *SoundEngine = createIrrKlangDevice();
-    SoundEngine->play2D("src/data/audio/light_spirit_appears.mp3", true);
-
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -151,7 +147,9 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback); 
     glfwSetScrollCallback(window, scroll_callback); 
 
-    // play music (Note, we'll need to use sfml-audio here)
+    // play music
+    ISoundEngine *SoundEngine = createIrrKlangDevice();
+    SoundEngine->play2D("src/data/audio/light_spirit_appears.ogg", true);
 
     // render window
 	render(window);
