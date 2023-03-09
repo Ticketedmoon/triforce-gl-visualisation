@@ -34,6 +34,35 @@ class Joystick
             return fov;
         }
 
+        glm::vec3 joystick_movement_callback(glm::vec3 cameraPos, glm::vec3 cameraFront, glm::vec3 cameraUp)
+        {
+            float currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+
+            if (joystickButtons.leftY < -0.3)
+            {
+                const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
+                cameraPos += (cameraSpeed * cameraFront);
+            }
+            if (joystickButtons.leftY > 0.3)
+            {
+                const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
+                cameraPos -= (cameraSpeed * cameraFront);
+            }
+            if (joystickButtons.leftX < -0.3)
+            {
+                const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
+                cameraPos -= (glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);
+            }
+            if (joystickButtons.leftX > 0.3)
+            {
+                const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
+                cameraPos += (glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);
+            }
+            return cameraPos;
+        }
+
         JoystickButtons getJoystickButtons() 
         {
             return joystickButtons;
@@ -41,4 +70,6 @@ class Joystick
 
     private:
         JoystickButtons joystickButtons = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+        float deltaTime = 0.0f;	// Time between current frame and last frame
+        float lastFrame = 0.0f; // Time of last frame
 };

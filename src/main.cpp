@@ -12,6 +12,7 @@ using namespace irrklang;
 
 #include "lib/shader/shader.hpp"
 #include "lib/controller/joystick.hpp"
+#include "lib/controller/keyboard.hpp"
 #include "lib/camera/camera.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -97,16 +98,10 @@ int indices[] = {
     4, 12, 13
 };
 
-float deltaTime = 0.0f;	// Time between current frame and last frame
-float lastFrame = 0.0f; // Time of last frame
-
-static bool isPlaying = false;
-
 static Shader shader;
 static Joystick joystick;
 static Camera camera;
-
-ISoundEngine *SoundEngine;
+static keyboard keyboard;
 
 uint32_t TOTAL_VERTICES = 54;
 
@@ -114,7 +109,7 @@ uint32_t TOTAL_VERTICES = 54;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void scroll_callback(GLFWwindow* window, double , double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 void render(GLFWwindow* window);
@@ -154,12 +149,6 @@ int main()
     glfwSetScrollCallback(window, scroll_callback); 
     glfwSetKeyCallback(window, key_callback);
 
-    // Initialise Sound Engine
-    SoundEngine = createIrrKlangDevice();
-
-    // Play
-    SoundEngine->play2D("src/data/audio/light_spirit_appears.ogg", true);
-
     // render window
 	render(window);
 
@@ -180,7 +169,7 @@ void render(GLFWwindow* window)
     glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-    
+
     camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
 
 	while(!glfwWindowShouldClose(window))
@@ -207,41 +196,21 @@ void joystick_callback(double xpos, double ypos)
         lastMouseY += ypos;
         
         const float sensitivity = 3.0f;
-        float xoffset = xpos * sensitivity;
-        float yoffset = ypos * sensitivity;
+        float xOffset = xpos * sensitivity;
+        float yOffset = ypos * sensitivity;
 
-        camera.updateRotationAxes(xoffset, yoffset, true);
+        camera.updateRotationAxes(xOffset, yOffset, true);
         camera.updateCameraFront();
     }
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        if (isPlaying)
-        {
-            SoundEngine->stopAllSounds();
-        } 
-        else 
-        {
-            SoundEngine->play2D("src/data/audio/light_spirit_appears.ogg", true);
-        }
-        isPlaying = !isPlaying;
-    }
+    keyboard.single_key_press_callback(window, key, action);
 }
 
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) 
-    {
-		glfwSetWindowShouldClose(window, true);
-	}
-
-    float currentFrame = glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
-
     bool joystickPresent = glfwJoystickPresent(GLFW_JOYSTICK_1);
 
     uint32_t fov = joystick.calculateNewFov(joystickPresent, camera.getFov());
@@ -249,32 +218,10 @@ void processInput(GLFWwindow *window)
 
     JoystickButtons buttons = joystick.getJoystickButtons();
 
-    glm::vec3 cameraPos = camera.getCameraPos();
-    glm::vec3 cameraFront = camera.getCameraFront();
-    glm::vec3 cameraUp = camera.getCameraUp();
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || buttons.leftY < -0.3)
-    {
-        const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
-        cameraPos += (cameraSpeed * cameraFront);
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || buttons.leftY > 0.3)
-    {
-        const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
-        cameraPos -= (cameraSpeed * cameraFront);
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || buttons.leftX < -0.3)
-    {
-        const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
-        cameraPos -= (glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || buttons.leftX > 0.3)
-    {
-        const float cameraSpeed = 3.5f * deltaTime; // adjust accordingly
-        cameraPos += (glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);
-    }
-
+    glm::vec3 cameraPos = keyboard.movement_key_press_callback(window, camera.getCameraPos(), camera.getCameraFront(), camera.getCameraUp());
+    cameraPos = joystick.joystick_movement_callback(cameraPos, camera.getCameraFront(), camera.getCameraUp());
     camera.setCameraPos(cameraPos);
+
     joystick_callback(buttons.rightX, buttons.rightY);
 }
 
@@ -325,20 +272,20 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         firstMouse = false;
     }
 
-    float xoffset = xpos - lastMouseX;
-    float yoffset = lastMouseY - ypos; // reversed since y-coordinates range from bottom to top
+    float xOffset = xpos - lastMouseX;
+    float yOffset = lastMouseY - ypos; // reversed since y-coordinates range from bottom to top
     lastMouseX = xpos;
     lastMouseY = ypos;
 
     const float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
 
-    camera.updateRotationAxes(xoffset, yoffset, false);
+    camera.updateRotationAxes(xOffset, yOffset, false);
     camera.updateCameraFront();
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void scroll_callback(GLFWwindow* window, double , double yoffset)
 {
     float fov = camera.getFov() - (float)yoffset;
     camera.setFov(fov);
