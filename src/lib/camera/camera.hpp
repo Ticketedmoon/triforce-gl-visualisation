@@ -26,7 +26,7 @@ class Camera
             updateCameraFront();
         }
 
-        void view(uint32_t vaoId, glm::vec3 cubePositions[])
+        void view(glm::vec3 cubePositions[])
         {
             glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             float radius = 30.0f;
@@ -41,8 +41,7 @@ class Camera
             glm::mat4 projection = glm::perspective(glm::radians(m_fov), (float)m_windowWidth / (float)m_windowHeight, 0.1f, 100.0f);
             glUniformMatrix4fv(glGetUniformLocation(m_shaderProgramId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-            glBindVertexArray(vaoId);
-            
+         
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[0]);
 

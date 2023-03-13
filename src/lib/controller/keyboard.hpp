@@ -74,7 +74,7 @@ class keyboard
     private:
         ISoundEngine *SoundEngine = createIrrKlangDevice();
         bool canPlayAudio = false;
-        unsigned short polygonState = 0;
+        unsigned short polygonState = 1;
         float deltaTime = 0.0f;	// Time between current frame and last frame
         float lastFrame = 0.0f; // Time of last frame
 };
