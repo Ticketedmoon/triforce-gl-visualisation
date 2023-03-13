@@ -4,6 +4,7 @@
 using namespace irrklang;
 
 #include "stdlib.h"
+#include <optional>
 #include <iostream>
 
 #include <glm/glm.hpp>
@@ -43,14 +44,12 @@ uint32_t TOTAL_VERTICES = 54;
 
 // Function Declarations.
 void processInput(GLFWwindow* window);
+void startGameLoop(GLFWwindow* window, Shader& shader);
+void draw(Shader& shader);
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double , double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
-void render(GLFWwindow* window, Shader& shader);
-void storeVertexDataOnGpu();
-void draw(Shader& shader);
-void playAudio(bool status);
 
 int main() 
 {
@@ -76,8 +75,7 @@ int main()
 
     camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
 
-    // render window
-	render(window, shader);
+	startGameLoop(window, shader);
 
     windowManager.clearVertexBuffer();
     shader.deleteProgram();
@@ -85,7 +83,7 @@ int main()
     return 0;
 }
 
-void render(GLFWwindow* window, Shader& shader)
+void startGameLoop(GLFWwindow* window, Shader& shader)
 {
 	while(!glfwWindowShouldClose(window))
 	{
@@ -96,6 +94,21 @@ void render(GLFWwindow* window, Shader& shader)
 		glfwSwapBuffers(window);
 		glfwPollEvents();    
 	}
+}
+
+std::optional<std::pair<float, float>> updatePositionsFromJoystick(float xpos, float ypos)
+{
+    if (xpos > 0.3 || xpos < -0.3 || ypos > 0.3 || ypos < -0.3)
+    {
+        lastMouseX -= xpos;
+        lastMouseY += ypos;
+        
+        const float sensitivity = 3.0f;
+        float xOffset = xpos * sensitivity;
+        float yOffset = ypos * sensitivity;
+        return std::make_pair(xOffset, yOffset);
+    }
+    return std::nullopt;
 }
 
 void processInput(GLFWwindow *window)
@@ -111,7 +124,12 @@ void processInput(GLFWwindow *window)
     cameraPos = joystick.joystick_movement_callback(cameraPos, camera.getCameraFront(), camera.getCameraUp());
     camera.setCameraPos(cameraPos);
 
-    joystick_callback(buttons.rightX, buttons.rightY);
+    auto offsetPair = updatePositionsFromJoystick(buttons.rightX, buttons.rightY);
+    if (offsetPair)
+    {
+        camera.updateRotationAxes(offsetPair.value().first, offsetPair.value().second, true);
+        camera.updateCameraFront();
+    }
 }
 
 void draw(Shader& shader)
@@ -129,22 +147,6 @@ void draw(Shader& shader)
 }
 
 // Callbacks
-
-void joystick_callback(double xpos, double ypos)
-{
-    if (xpos > 0.3 || xpos < -0.3 || ypos > 0.3 || ypos < -0.3)
-    {
-        lastMouseX -= xpos;
-        lastMouseY += ypos;
-        
-        const float sensitivity = 3.0f;
-        float xOffset = xpos * sensitivity;
-        float yOffset = ypos * sensitivity;
-
-        camera.updateRotationAxes(xOffset, yOffset, true);
-        camera.updateCameraFront();
-    }
-}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
