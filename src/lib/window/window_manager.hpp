@@ -1,4 +1,7 @@
+#pragma once
+
 #include <glad/glad.h> 
+#include <iostream>
 #include <GLFW/glfw3.h>
 
 float vertices[] = {
@@ -67,6 +70,8 @@ int indices[] = {
 class WindowManager
 {
     public:
+        WindowManager() = default;
+        
         WindowManager(uint32_t width, uint32_t height)
         {
             m_width = width;
