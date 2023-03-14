@@ -26,7 +26,7 @@ class Camera
             updateCameraFront();
         }
 
-        void view(glm::vec3 cubePositions[])
+        void view(const glm::vec3 cubePositions[])
         {
             glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             float radius = 30.0f;

@@ -3,7 +3,7 @@
 int main() 
 {
     std::cout << "Hello, Triforce!" << std::endl;
-    Engine engine(800, 600);
+    Engine engine;
 
     bool isCreated = engine.create();
     if (!isCreated)

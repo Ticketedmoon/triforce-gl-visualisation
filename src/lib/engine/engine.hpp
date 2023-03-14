@@ -8,13 +8,16 @@
 
 #pragma once
 
-float lastMouseX;
-float lastMouseY;
+static const uint32_t WINDOW_WIDTH = 1280;
+static const uint32_t WINDOW_HEIGHT = 720;
 
-bool firstMouse = true;
+static float lastMouseX = WINDOW_WIDTH / 2;
+static float lastMouseY = WINDOW_HEIGHT / 2;
+
+static bool firstMouse = true;
 
 // Array in-case we want more positions
-static glm::vec3 cubePositions[] = {
+static const glm::vec3 cubePositions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f)
 };
 
@@ -22,21 +25,15 @@ static Camera camera;
 static Joystick joystick;
 static keyboard keyboard;
 
-uint32_t TOTAL_VERTICES = 54;
+static const uint32_t TOTAL_VERTICES = 54;
 
 class Engine
 {
     public:
-        Engine(uint32_t windowWidth, uint32_t windowHeight)
+        Engine()
         {
-            windowManager = WindowManager(windowWidth, windowHeight);
+            windowManager = WindowManager(WINDOW_WIDTH, WINDOW_HEIGHT);
             window = windowManager.init();
-
-            lastMouseX = windowWidth / 2;
-            lastMouseY = windowHeight / 2;
-
-            m_windowWidth = windowWidth;
-            m_windowHeight = windowHeight;
         }
 
         bool create()
@@ -57,7 +54,7 @@ class Engine
             glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
             glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
-            camera = Camera(m_windowWidth, m_windowHeight, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
+            camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
             return true;
         }
 
@@ -82,7 +79,6 @@ class Engine
         }
 
     private:
-        uint32_t m_windowWidth, m_windowHeight; 
         GLFWwindow* window;
         Shader shader;
         WindowManager windowManager;
