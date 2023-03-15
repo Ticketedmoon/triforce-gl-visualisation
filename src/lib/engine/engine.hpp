@@ -1,12 +1,14 @@
+#pragma once
+
 #include "../window/window_manager.hpp"
+#include "../graphics/renderer.hpp"
 #include "../shader/shader.hpp"
 #include "../controller/joystick.hpp"
 #include "../controller/keyboard.hpp"
 #include "../camera/camera.hpp"
 
 #include <optional>
-
-#pragma once
+#include <vector>
 
 static const uint32_t WINDOW_WIDTH = 1280;
 static const uint32_t WINDOW_HEIGHT = 720;
@@ -17,7 +19,7 @@ static float lastMouseY = WINDOW_HEIGHT / 2;
 static bool firstMouse = true;
 
 // Array in-case we want more positions
-static const glm::vec3 cubePositions[] = {
+static const std::vector<glm::vec3> cubePositions = {
     glm::vec3(0.0f,  0.0f,  0.0f)
 };
 
@@ -25,25 +27,23 @@ static Camera camera;
 static Joystick joystick;
 static keyboard keyboard;
 
-static const uint32_t TOTAL_VERTICES = 54;
-
 class Engine
 {
     public:
         Engine()
         {
-            windowManager = WindowManager(WINDOW_WIDTH, WINDOW_HEIGHT);
+            WindowManager windowManager(WINDOW_WIDTH, WINDOW_HEIGHT);
             window = windowManager.init();
-        }
 
-        bool create()
-        {
-            if (window == NULL)
+            if (window == nullptr)
             {
-                return false;
+                throw std::runtime_error("Failed to load window context, window is null");
             }
-            
-            windowManager.storeVertexDataOnGpu();
+
+            Renderer renderer;
+            renderer.enable(GL_DEPTH_TEST);
+            renderer.storeVertexDataOnGpu();
+
             glfwSetCursorPosCallback(window, mouse_callback); 
             glfwSetScrollCallback(window, scroll_callback); 
             glfwSetKeyCallback(window, key_callback);
@@ -54,8 +54,7 @@ class Engine
             glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
             glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
-            camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader.getID(), cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
-            return true;
+            camera = Camera(WINDOW_WIDTH, WINDOW_HEIGHT, shader, cameraPos, cameraPos + cameraFront, cameraUp, 45.0f, 0.0f, -90.f);
         }
 
         void startGameLoop()
@@ -73,7 +72,7 @@ class Engine
 
         void tearDown()
         {
-            windowManager.clearVertexBuffer();
+            renderer.clearVertexBuffer();
             shader.deleteProgram();
             glfwTerminate();
         }
@@ -81,7 +80,7 @@ class Engine
     private:
         GLFWwindow* window;
         Shader shader;
-        WindowManager windowManager;
+        Renderer renderer;
 
         std::optional<std::pair<float, float>> updatePositionsFromJoystick(float xpos, float ypos)
         {
@@ -123,9 +122,8 @@ class Engine
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             shader.use();
-            camera.view(cubePositions);
-
-            glDrawElements(GL_TRIANGLES, TOTAL_VERTICES, GL_UNSIGNED_INT, 0);
+            camera.setup();
+            renderer.render(cubePositions, shader);
         }
 
         // Callbacks

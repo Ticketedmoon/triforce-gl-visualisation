@@ -1,8 +1,14 @@
 #pragma once
 
 #include <glad/glad.h> 
-#include <iostream>
 #include <GLFW/glfw3.h>
+#include <iostream>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "../shader/shader.hpp"
 
 float vertices[] = {
     // Back
@@ -66,6 +72,7 @@ int indices[] = {
     4, 12, 13
 };
 
+static const uint32_t TOTAL_VERTICES = 54;
 
 class WindowManager
 {
@@ -102,46 +109,11 @@ class WindowManager
 
             glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback); 
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            glEnable(GL_DEPTH_TEST);
-
             return m_window;
-        }
-
-        void storeVertexDataOnGpu()
-        {
-            glGenVertexArrays(1, &vaoId);
-            glGenBuffers(1, &vboId);
-            glGenBuffers(1, &eboId);
-
-            glBindVertexArray(vaoId);
-
-            glBindBuffer(GL_ARRAY_BUFFER, vboId);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboId);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(0);
-
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-            glEnableVertexAttribArray(1);
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0); 
-            glBindVertexArray(0); 
-            
-            glBindVertexArray(vaoId);
-        }
-
-        void clearVertexBuffer()
-        {
-            glDeleteVertexArrays(1, &vaoId);
-            glDeleteBuffers(1, &vboId);
         }
 
     private:
         uint32_t m_width, m_height;
-        uint32_t vboId, vaoId, eboId;
 
         static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
         {
