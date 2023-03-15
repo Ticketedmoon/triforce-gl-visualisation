@@ -4,11 +4,15 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
+#include <optional>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../shader/shader.hpp"
+#include "../camera/camera.hpp"
+#include "../controller/keyboard.hpp"
+#include "../controller/joystick.hpp"
 
 float vertices[] = {
     // Back
@@ -74,6 +78,9 @@ int indices[] = {
 
 static const uint32_t TOTAL_VERTICES = 54;
 
+static Joystick joystick;
+static keyboard keyboard;
+
 class WindowManager
 {
     public:
@@ -92,7 +99,7 @@ class WindowManager
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-            GLFWwindow* m_window = glfwCreateWindow(m_width, m_height, "Application", NULL, NULL);
+            m_window = glfwCreateWindow(m_width, m_height, "Application", NULL, NULL);
             if (m_window == NULL)
             {
                 std::cout << "Failed to create GLFW window" << std::endl;
@@ -109,15 +116,60 @@ class WindowManager
 
             glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback); 
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            
+            glfwSetKeyCallback(m_window, key_callback);
+
             return m_window;
+        }
+
+        void processInput(Camera& camera, float lastMouseX, float lastMouseY)
+        {
+            bool joystickPresent = glfwJoystickPresent(GLFW_JOYSTICK_1);
+            uint32_t fov = joystick.calculateNewFov(joystickPresent, camera.getFov());
+            camera.setFov(fov);
+            JoystickButtons buttons = joystick.getJoystickButtons();
+
+            glm::vec3 cameraPos = keyboard.movement_key_press_callback(m_window, camera.getCameraPos(), camera.getCameraFront(), camera.getCameraUp());
+            cameraPos = joystick.joystick_movement_callback(cameraPos, camera.getCameraFront(), camera.getCameraUp());
+            camera.setCameraPos(cameraPos);
+
+            auto offsetPair = updatePositionsFromJoystick(buttons.rightX, buttons.rightY, lastMouseX, lastMouseY);
+            if (offsetPair)
+            {
+                camera.updateRotationAxes(offsetPair.value().first, offsetPair.value().second, true);
+                camera.updateCameraFront();
+            }
         }
 
     private:
         uint32_t m_width, m_height;
+        GLFWwindow* m_window;
+
+        std::optional<std::pair<float, float>> updatePositionsFromJoystick(float xpos, float ypos, float lastMouseX, float lastMouseY)
+        {
+            if (xpos > 0.3 || xpos < -0.3 || ypos > 0.3 || ypos < -0.3)
+            {
+                lastMouseX -= xpos;
+                lastMouseY += ypos;
+                
+                const float sensitivity = 3.0f;
+                float xOffset = xpos * sensitivity;
+                float yOffset = ypos * sensitivity;
+                return std::make_pair(xOffset, yOffset);
+            }
+            return std::nullopt;
+        }
+
+        // Callbacks
 
         static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
         {
             glViewport(0, 0, width, height);
+        }
+
+        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+        {
+            keyboard.single_key_press_callback(window, key, action);
         }
 
 };

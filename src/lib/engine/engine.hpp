@@ -7,7 +7,6 @@
 #include "../controller/keyboard.hpp"
 #include "../camera/camera.hpp"
 
-#include <optional>
 #include <vector>
 
 static const uint32_t WINDOW_WIDTH = 1280;
@@ -24,15 +23,13 @@ static const std::vector<glm::vec3> cubePositions = {
 };
 
 static Camera camera;
-static Joystick joystick;
-static keyboard keyboard;
 
 class Engine
 {
     public:
         Engine()
         {
-            WindowManager windowManager(WINDOW_WIDTH, WINDOW_HEIGHT);
+            windowManager = WindowManager(WINDOW_WIDTH, WINDOW_HEIGHT);
             window = windowManager.init();
 
             if (window == nullptr)
@@ -46,7 +43,6 @@ class Engine
 
             glfwSetCursorPosCallback(window, mouse_callback); 
             glfwSetScrollCallback(window, scroll_callback); 
-            glfwSetKeyCallback(window, key_callback);
 
             shader = Shader("src/data/shader/vertex.shader", "src/data/shader/fragment.shader");
 
@@ -61,7 +57,7 @@ class Engine
         {
             while(!glfwWindowShouldClose(window))
             {
-                processInput();
+                windowManager.processInput(camera, lastMouseX, lastMouseY);
 
                 draw();
 
@@ -80,41 +76,8 @@ class Engine
     private:
         GLFWwindow* window;
         Shader shader;
+        WindowManager windowManager;
         Renderer renderer;
-
-        std::optional<std::pair<float, float>> updatePositionsFromJoystick(float xpos, float ypos)
-        {
-            if (xpos > 0.3 || xpos < -0.3 || ypos > 0.3 || ypos < -0.3)
-            {
-                lastMouseX -= xpos;
-                lastMouseY += ypos;
-                
-                const float sensitivity = 3.0f;
-                float xOffset = xpos * sensitivity;
-                float yOffset = ypos * sensitivity;
-                return std::make_pair(xOffset, yOffset);
-            }
-            return std::nullopt;
-        }
-
-        void processInput()
-        {
-            bool joystickPresent = glfwJoystickPresent(GLFW_JOYSTICK_1);
-            uint32_t fov = joystick.calculateNewFov(joystickPresent, camera.getFov());
-            camera.setFov(fov);
-            JoystickButtons buttons = joystick.getJoystickButtons();
-
-            glm::vec3 cameraPos = keyboard.movement_key_press_callback(window, camera.getCameraPos(), camera.getCameraFront(), camera.getCameraUp());
-            cameraPos = joystick.joystick_movement_callback(cameraPos, camera.getCameraFront(), camera.getCameraUp());
-            camera.setCameraPos(cameraPos);
-
-            auto offsetPair = updatePositionsFromJoystick(buttons.rightX, buttons.rightY);
-            if (offsetPair)
-            {
-                camera.updateRotationAxes(offsetPair.value().first, offsetPair.value().second, true);
-                camera.updateCameraFront();
-            }
-        }
 
         void draw()
         {
@@ -127,11 +90,6 @@ class Engine
         }
 
         // Callbacks
-
-        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-        {
-            keyboard.single_key_press_callback(window, key, action);
-        }
 
         static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         {
@@ -155,9 +113,9 @@ class Engine
             camera.updateCameraFront();
         }
 
-        static void scroll_callback(GLFWwindow* window, double , double yoffset)
+        static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
         {
-            float fov = camera.getFov() - (float)yoffset;
+            float fov = camera.getFov() - (float)yOffset;
             camera.setFov(fov);
         }
 };
