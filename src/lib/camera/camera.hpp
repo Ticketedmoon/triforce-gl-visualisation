@@ -28,7 +28,7 @@ class Camera
             updateCameraFront();
         }
 
-        void setup()
+        void refresh()
         {
             float radius = 30.0f;
             float camX = static_cast<float>(sin(glfwGetTime()) * radius);

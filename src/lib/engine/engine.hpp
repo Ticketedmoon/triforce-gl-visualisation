@@ -45,6 +45,7 @@ class Engine
             glfwSetScrollCallback(window, scroll_callback); 
 
             shader = Shader("src/data/shader/vertex.shader", "src/data/shader/fragment.shader");
+            shader.use();
 
             glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
             glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -84,8 +85,7 @@ class Engine
             glClearColor(0.0f, 0.0f, 0.5f, 0.2f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            shader.use();
-            camera.setup();
+            camera.refresh();
             renderer.render(cubePositions, shader);
         }
 
