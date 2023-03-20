@@ -16,8 +16,6 @@
 class Shader
 {
     public:
-        unsigned int ID;
-
         Shader() = default;
 
         // constructor generates the shader on the fly
@@ -126,6 +124,7 @@ class Shader
         }
 
     private:
+        unsigned int ID;
         // utility function for checking shader compilation/linking errors.
         void checkCompileErrors(unsigned int shader, std::string type)
         {

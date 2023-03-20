@@ -3,9 +3,9 @@
 int main() 
 {
     std::cout << "Hello, Triforce!" << std::endl;
-    Engine engine;
 
-	engine.startGameLoop();
+    Engine engine;
+    engine.startGameLoop();
     engine.tearDown();
     return 0;
 }
