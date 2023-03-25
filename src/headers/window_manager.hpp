@@ -1,18 +1,12 @@
 #pragma once
 
-#include <glad/glad.h> 
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <vector>
-#include <optional>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "shader.hpp"
 #include "camera.hpp"
 #include "keyboard.hpp"
 #include "joystick.hpp"
+
+#include <vector>
+#include <optional>
 
 class WindowManager
 {
