@@ -1,4 +1,6 @@
-g++ ./src/main.cpp ./src/lib/**/*.c \
+g++ ./src/lib/**/*.cpp \
+    ./src/main.cpp \
+    ./src/lib/**/*.c \
     -o application.exe \
     -I./include \
     -I./deps/glfw/include \
